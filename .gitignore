@@ -10,3 +10,6 @@ wheels/
 .venv
 
 .env
+
+# the dataset with questions
+dataset.csv
