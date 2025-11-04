@@ -75,14 +75,17 @@ def ingest_csv_data(engine, csv_path):
 
                 show_number, air_date, round_name, category, value, question, answer = row
 
-                # Parse the date
                 try:
                     parsed_date = datetime.strptime(air_date, '%Y-%m-%d').date()
                 except ValueError:
                     print(f"Skipping row with invalid date: {air_date}")
                     continue
 
-                # Create question object
+                value_in_dollars = parse_value(value)
+                if value_in_dollars is not None and value_in_dollars > 1200:
+                    # all questions with value more than $1200 should be skipped
+                    continue
+
                 question_obj = JeopardyQuestion(
                     show_number=int(show_number),
                     air_date=parsed_date,
