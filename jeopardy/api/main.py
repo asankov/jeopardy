@@ -1,15 +1,21 @@
-from pathlib import Path
 from fastapi import FastAPI, HTTPException, Depends
 from sqlalchemy import create_engine, func
 from sqlalchemy.orm import sessionmaker, Session
 from dotenv import load_dotenv
+import logging
 
 from jeopardy.db import get_database_url
 from jeopardy.db.models import JeopardyQuestion
-from jeopardy.ai.oracle import Oracle
+from jeopardy.ai.oracle import NotAbleToDetermineAnswer, Oracle
 from jeopardy.api.models import GetRandomQuestionResponse, VerifyAnswerRequest, VerifyAnswerResponse, VerifyAnswerRequest, VerifyAnswerResponse
 
 load_dotenv()
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
@@ -79,6 +85,15 @@ def verify_answer(request: VerifyAnswerRequest, db: Session = Depends(get_db), o
             detail=f"No question found for ID {request.question_id}"
         )
 
-    response = oracle.determine_correctness(question=question.question, correct_answer=question.answer, given_answer=request.user_answer)
+    try:
+        response = oracle.determine_correctness(question=question.question, correct_answer=question.answer, given_answer=request.user_answer)
+    except NotAbleToDetermineAnswer:
+        # TODO: we need better handling here, we should be able to get more details on what went wrong
+        logger.warn("Something went wrong with determining the correctness.")
+
+        raise HTTPException(
+            status_code=500,
+            detail=f"Not able to determine if answer is correct or not"
+        )
 
     return VerifyAnswerResponse(is_correct=response.is_correct, ai_response=response.reason)
