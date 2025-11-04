@@ -1,12 +1,13 @@
 import os
 from pathlib import Path
 from fastapi import FastAPI, HTTPException, Depends
-from pydantic import BaseModel
 from sqlalchemy import create_engine, func
 from sqlalchemy.orm import sessionmaker, Session
 
 from jeopardy.db import get_database_url
 from jeopardy.db.models import JeopardyQuestion
+
+from jeopardy.api.models import GetRandomQuestionResponse, VerifyAnswerRequest, VerifyAnswerResponse, VerifyAnswerRequest, VerifyAnswerResponse
 
 app = FastAPI()
 
@@ -22,14 +23,6 @@ def get_db():
         db.close()
 
 
-class QuestionResponse(BaseModel):
-    question_id: int
-    round: str
-    category: str
-    value: str
-    question: str
-
-
 def format_value(value_in_dollars: int | None) -> str:
     """Format integer value to dollar string."""
     if value_in_dollars is None:
@@ -37,7 +30,7 @@ def format_value(value_in_dollars: int | None) -> str:
     return f"${value_in_dollars}"
 
 
-@app.get("/question/", response_model=QuestionResponse)
+@app.get("/question/", response_model=GetRandomQuestionResponse)
 def get_random_question(round: str, value: str, db: Session = Depends(get_db)):
     """
     Returns a random question based on the provided Round and Value.
@@ -64,10 +57,18 @@ def get_random_question(round: str, value: str, db: Session = Depends(get_db)):
             detail=f"No question found for round '{round}' and value '{value}'"
         )
 
-    return QuestionResponse(
+    return GetRandomQuestionResponse(
         question_id=question.id,
         round=question.round,
         category=question.category,
         value=format_value(question.value_in_dollars),
         question=question.question
     )
+
+@app.post("/verify-answer/", response_model=VerifyAnswerResponse)
+def verify_answer(request: VerifyAnswerRequest, db: Session = Depends(get_db)):
+    question = db.query(JeopardyQuestion).where(JeopardyQuestion.id == request.question_id)
+
+    # TODO: use AI to determine if answer is correct
+
+    return VerifyAnswerResponse(is_correct=False, ai_response="")
