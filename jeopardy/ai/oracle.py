@@ -83,7 +83,6 @@ class Oracle:
 
         for output in completion.output:
             if isinstance(output, ResponseOutputMessage):
-                print(f"response is {output.content[0].text}")
                 return Response(**json.loads(output.content[0].text))
 
         raise NotAbleToDetermineAnswer()
