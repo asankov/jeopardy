@@ -66,14 +66,35 @@ Prerequisites:
 
 To develop locally:
 
-- [Install Docker Compose](https://docs.docker.com/compose/install)
-- Download the [dataset from Github](https://github.com/russmatney/go-jeopardy/blob/master/JEOPARDY_CSV.csv)
-  - you can do this by running `curl -L -o dataset.csv https://raw.githubusercontent.com/russmatney/go-jeopardy/master/JEOPARDY_CSV.csv`
-- Create an OpenAI Account and get an API key from [here](https://platform.openai.com/settings/organization/api-keys)
-- Create `.env` file from `.env.example` and populate with your OpenAI API key
-- run `docker compose up docker-compose-local.yaml`
-  - this will start PostgreSQL and Phoenix, but will not start `ingester` and `api`, allowing you to modify them and run locally without rebuilding the container images every time
-- run `uv run jeopardy/ingester/ingest_data.py`
-  - this will populate your database with the dataset
-- run `fastapi dev jeopardy/api/main.py`
-  - this will run the API server in dev mode reloading every time you make a change
+1. [Install Docker Compose](https://docs.docker.com/compose/install)
+
+2. Download the [dataset from Github](https://github.com/russmatney/go-jeopardy/blob/master/JEOPARDY_CSV.csv).
+You can do this by running `curl -L -o dataset.csv https://raw.githubusercontent.com/russmatney/go-jeopardy/master/JEOPARDY_CSV.csv`
+
+3. Create an OpenAI Account and get an API key from [here](https://platform.openai.com/settings/organization/api-keys)
+
+4. Create `.env` file from `.env.example` and populate with your OpenAI API key
+
+5. Run `docker compose up docker-compose-local.yaml`
+
+  This will start PostgreSQL and Phoenix, but will not start `ingester` and `api`, allowing you to modify them and run locally without rebuilding the container images every time
+
+6. Initialize virtial enviroment
+
+  ```shell
+  # create virtual env
+  uv venv
+  # activate the virtual env
+  source .venv/bin/activate
+  # install dependencies
+  uv sync
+  ```
+
+7. Run `uv run jeopardy/ingester/ingest_data.py`
+
+  This will populate your database with the dataset
+
+8. Run `fastapi dev jeopardy/api/main.py`
+
+  This will run the API server in dev mode reloading every time you make a change.
+  Make changes and see them live in your browser.
