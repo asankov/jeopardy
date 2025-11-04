@@ -16,5 +16,33 @@ services:
       timeout: 5s
       retries: 5
 
+  ingester:
+    build:
+      context: .
+      dockerfile: jeopardy/ingester/Dockerfile
+    container_name: jeopardy-ingester
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/jeopardy
+      DATASET_PATH: /app/dataset.csv
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: on-failure
+
+  api:
+    build:
+      context: .
+      dockerfile: jeopardy/api/Dockerfile
+    container_name: jeopardy-api
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/jeopardy
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+    ports:
+      - "8000:8000"
+    depends_on:
+      ingester:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
 volumes:
   postgres_data:
