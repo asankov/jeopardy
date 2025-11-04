@@ -10,24 +10,8 @@ from datetime import datetime
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from models import create_tables, JeopardyQuestion
-
-
-def get_database_url():
-    db_url = os.getenv('DATABASE_URL')
-
-    if not db_url:
-        # Default local PostgreSQL configuration
-        db_user = os.getenv('POSTGRES_USER', 'postgres')
-        db_password = os.getenv('POSTGRES_PASSWORD', 'postgres')
-        db_host = os.getenv('POSTGRES_HOST', 'localhost')
-        db_port = os.getenv('POSTGRES_PORT', '5432')
-        db_name = os.getenv('POSTGRES_DB', 'jeopardy')
-
-        db_url = f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
-
-    return db_url
-
+from jeopardy.ingester.models import create_tables, JeopardyQuestion
+from jeopardy.db import get_database_url
 
 def parse_value(value_str):
     """
