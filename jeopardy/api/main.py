@@ -93,7 +93,7 @@ def verify_answer(request: VerifyAnswerRequest, db: Session = Depends(get_db), o
         response = oracle.determine_correctness(question=question.question, correct_answer=question.answer, given_answer=request.user_answer)
     except NotAbleToDetermineAnswer:
         # TODO: we need better handling here, we should be able to get more details on what went wrong
-        logger.warn("Something went wrong with determining the correctness.")
+        logger.warning("Something went wrong with determining the correctness.")
 
         raise HTTPException(
             status_code=500,
