@@ -8,6 +8,7 @@ from jeopardy.db import get_database_url
 from jeopardy.db.models import JeopardyQuestion
 from jeopardy.ai.oracle import NotAbleToDetermineAnswer, Oracle
 from jeopardy.api.models import GetRandomQuestionResponse, VerifyAnswerRequest, VerifyAnswerResponse, AgentPlayResponse
+from jeopardy.observability import setup_phoenix_tracing
 
 load_dotenv()
 
@@ -16,6 +17,9 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+# Set up Phoenix tracing on module load
+setup_phoenix_tracing()
 
 app = FastAPI()
 

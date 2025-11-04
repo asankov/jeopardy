@@ -29,12 +29,15 @@ This will do a few things:
 1. Start an empty PostgreSQL container
 2. Run the `ingester` and ingest the data from the dataset into the newly created PostgreSQL database.
 3. After the ingestor is done, it will start the `api` container
+4. Run Phoenix where you can observe the interactions with the LLM
 
 Docker will automatically build the container images using the Dockerfiles in their respective folders.
 You do not need to build any images manually or configure access to a private registry to get them.
 
 Once started, you can call the API on <http://localhost:8000>.
 There is no UI yet, so the easiest way to interact with it is via the Swagger docs at <http://localhost:8000/docs>.
+
+After you've interacted with the API you can go to Phoenix at <http://localhost:6006/> and observe the messages that were exchanged with the LLM.
 
 ## Components
 
