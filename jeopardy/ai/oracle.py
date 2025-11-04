@@ -7,12 +7,46 @@ class Response(BaseModel):
     is_correct: bool
     reason: str
 
+class NotAbleToAnswer(Exception):
+    pass
+
 class NotAbleToDetermineAnswer(Exception):
     pass
 
 class Oracle:
     def __init__(self, api_key: str | None = None) -> None:
         self._client = OpenAI(api_key=api_key)
+
+    def answer_question(self, question: str, category: str) -> str:
+        """Generate an answer to a Jeopardy question."""
+        completion = self._client.responses.create(
+            model="gpt-5",
+            tools=[
+                {"type": "web_search"},
+            ],
+            input=[
+                {
+                    "role": "system",
+                    "content": """
+You are a Jeopardy contestant.
+
+Answer the question concisely with just the answer, no extra explanation.
+You are allowed to search the internet for an answer.
+You must always answer even if you do not know the answer.
+"""
+                },
+                {
+                    "role": "user",
+                    "content": f"Category: {category}\nQuestion: {question}"
+                }
+            ]
+        )
+
+        for output in completion.output:
+            if isinstance(output, ResponseOutputMessage):
+                return output.content[0].text
+
+        raise NotAbleToAnswer()
 
     def determine_correctness(self, question: str, correct_answer: str, given_answer: str) -> Response:
         completion = self._client.responses.create(

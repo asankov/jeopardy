@@ -7,7 +7,7 @@ import logging
 from jeopardy.db import get_database_url
 from jeopardy.db.models import JeopardyQuestion
 from jeopardy.ai.oracle import NotAbleToDetermineAnswer, Oracle
-from jeopardy.api.models import GetRandomQuestionResponse, VerifyAnswerRequest, VerifyAnswerResponse, VerifyAnswerRequest, VerifyAnswerResponse
+from jeopardy.api.models import GetRandomQuestionResponse, VerifyAnswerRequest, VerifyAnswerResponse, AgentPlayResponse
 
 load_dotenv()
 
@@ -97,3 +97,53 @@ def verify_answer(request: VerifyAnswerRequest, db: Session = Depends(get_db), o
         )
 
     return VerifyAnswerResponse(is_correct=response.is_correct, ai_response=response.reason)
+
+@app.post("/agent-play/", response_model=AgentPlayResponse)
+def agent_play(db: Session = Depends(get_db), oracle: Oracle = Depends(get_oracle)):
+    """
+    AI agent that selects a random question and attempts to answer it.
+
+    This endpoint:
+    1. Calls get_random_question to fetch a question
+    2. Uses the Oracle to generate an answer
+    3. Calls verify_answer to check if the answer is correct
+    """
+    import random
+    # some random values i saw in the database,
+    # this can be improved so that it's not hardcoded by:
+        # 1. making rounds an enum
+        # 2. existing a SELECT DISTINCT(values_in_dollars) query in the DB
+    # this will also be a good improvement if we implement a UI
+    # since that way, the UI will know what values exactly it needs to pass
+    rounds = ["Jeopardy!", "Double Jeopardy!"]
+    values = ["$200", "$400", "$600", "$800", "$1000"]
+
+    selected_round = random.choice(rounds)
+    selected_value = random.choice(values)
+
+    question_response = get_random_question(round=selected_round, value=selected_value, db=db)
+
+    try:
+        ai_answer = oracle.answer_question(
+            question=question_response.question,
+            category=question_response.category
+        )
+    except Exception as e:
+        logger.error(f"Failed to generate answer: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to generate answer"
+        )
+
+    verify_request = VerifyAnswerRequest(
+        question_id=question_response.question_id,
+        user_answer=ai_answer
+    )
+    verification_response = verify_answer(request=verify_request, db=db, oracle=oracle)
+
+    return AgentPlayResponse(
+        agent_name="AI-Bot",
+        question=question_response.question,
+        ai_answer=ai_answer,
+        is_correct=verification_response.is_correct,
+    )

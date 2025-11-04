@@ -14,3 +14,9 @@ class VerifyAnswerRequest(BaseModel):
 class VerifyAnswerResponse(BaseModel):
     is_correct: bool
     ai_response: str
+
+class AgentPlayResponse(BaseModel):
+    agent_name: str
+    question: str
+    ai_answer: str
+    is_correct: bool
