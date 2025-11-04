@@ -10,7 +10,7 @@ from datetime import datetime
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from jeopardy.ingester.models import create_tables, JeopardyQuestion
+from jeopardy.db.models import create_tables, JeopardyQuestion
 from jeopardy.db import get_database_url
 
 def parse_value(value_str):

@@ -5,30 +5,13 @@ from pydantic import BaseModel
 from sqlalchemy import create_engine, func
 from sqlalchemy.orm import sessionmaker, Session
 
-from ingester.models import JeopardyQuestion
+from jeopardy.db import get_database_url
+from jeopardy.db.models import JeopardyQuestion
 
 app = FastAPI()
 
-
-# Database setup
-def get_database_url():
-    """Get database URL from environment or use default."""
-    db_url = os.getenv('DATABASE_URL')
-
-    if not db_url:
-        db_user = os.getenv('POSTGRES_USER', 'postgres')
-        db_password = os.getenv('POSTGRES_PASSWORD', 'postgres')
-        db_host = os.getenv('POSTGRES_HOST', 'localhost')
-        db_port = os.getenv('POSTGRES_PORT', '5432')
-        db_name = os.getenv('POSTGRES_DB', 'jeopardy')
-        db_url = f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
-
-    return db_url
-
-
 engine = create_engine(get_database_url(), echo=False)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
 
 def get_db():
     """Dependency to get database session."""
@@ -61,7 +44,6 @@ def get_random_question(round: str, value: str, db: Session = Depends(get_db)):
 
     Example: GET /question/?round=Jeopardy!&value=$200
     """
-    # Parse value from string to integer
     try:
         value_int = int(value.replace('$', '').replace(',', '')) if value != "None" else None
     except ValueError:
