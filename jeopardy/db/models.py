@@ -1,5 +1,8 @@
+from datetime import date
+
+from typing import Optional
 from sqlalchemy import Column, Integer, String, Date
-from sqlalchemy.orm import DeclarativeBase, sessionmaker
+from sqlalchemy.orm import DeclarativeBase, sessionmaker, Mapped, mapped_column
 
 
 class Base(DeclarativeBase):
@@ -21,17 +24,17 @@ class JeopardyQuestion(Base):
     """
     __tablename__ = 'jeopardy_questions'
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    show_number = Column(Integer, nullable=False, index=True)
-    air_date = Column(Date, nullable=False, index=True)
-    round = Column(String(50), nullable=False)
-    category = Column(String(255), nullable=False)
-    value_in_dollars = Column(Integer)
-    question = Column(String, nullable=False)
-    answer = Column(String, nullable=False)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    show_number: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
+    air_date: Mapped[date] = mapped_column(Date, nullable=False, index=True)
+    round: Mapped[str] = mapped_column(String(50), nullable=False)
+    category: Mapped[str] = mapped_column(String(255), nullable=False)
+    value_in_dollars: Mapped[Optional[int]] = mapped_column(Integer)
+    question: Mapped[str] = mapped_column(String, nullable=False)
+    answer: Mapped[str] = mapped_column(String, nullable=False)
 
     def __repr__(self):
-        return f"<JeopardyQuestion(show={self.show_number}, date={self.air_date}, category='{self.category}', value={self.value})>"
+        return f"<JeopardyQuestion(show={self.show_number}, date={self.air_date}, category='{self.category}', value={self.value_in_dollars})>"
 
 
 def create_tables(engine):
