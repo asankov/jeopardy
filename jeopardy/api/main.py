@@ -1,13 +1,15 @@
-import os
 from pathlib import Path
 from fastapi import FastAPI, HTTPException, Depends
 from sqlalchemy import create_engine, func
 from sqlalchemy.orm import sessionmaker, Session
+from dotenv import load_dotenv
 
 from jeopardy.db import get_database_url
 from jeopardy.db.models import JeopardyQuestion
-
+from jeopardy.ai.oracle import Oracle
 from jeopardy.api.models import GetRandomQuestionResponse, VerifyAnswerRequest, VerifyAnswerResponse, VerifyAnswerRequest, VerifyAnswerResponse
+
+load_dotenv()
 
 app = FastAPI()
 
@@ -22,6 +24,9 @@ def get_db():
     finally:
         db.close()
 
+def get_oracle():
+    oracle = Oracle()
+    yield oracle
 
 def format_value(value_in_dollars: int | None) -> str:
     """Format integer value to dollar string."""
@@ -66,9 +71,14 @@ def get_random_question(round: str, value: str, db: Session = Depends(get_db)):
     )
 
 @app.post("/verify-answer/", response_model=VerifyAnswerResponse)
-def verify_answer(request: VerifyAnswerRequest, db: Session = Depends(get_db)):
-    question = db.query(JeopardyQuestion).where(JeopardyQuestion.id == request.question_id)
+def verify_answer(request: VerifyAnswerRequest, db: Session = Depends(get_db), oracle: Oracle = Depends(get_oracle)):
+    question = db.get(JeopardyQuestion, request.question_id)
+    if not question:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No question found for ID {request.question_id}"
+        )
 
-    # TODO: use AI to determine if answer is correct
+    response = oracle.determine_correctness(question=question.question, correct_answer=question.answer, given_answer=request.user_answer)
 
-    return VerifyAnswerResponse(is_correct=False, ai_response="")
+    return VerifyAnswerResponse(is_correct=response.is_correct, ai_response=response.reason)
